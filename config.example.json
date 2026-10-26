@@ -1,0 +1,14 @@
+{
+  "token": "PASTE_BOT_TOKEN",
+  "brand_name": "AxionHost",
+  "prefix": ".",
+  "main_admin_id": "YOUR_DISCORD_USER_ID",
+  "guild_id": "YOUR_SERVER_ID",
+  "server_ip": "YOUR_NODE_PUBLIC_IP",
+  "node_name": "Node-1",
+  "logo_url": "",
+  "banner_url": "",
+  "alert_channel_id": "",
+  "status_channel_id": "",
+  "storage_pool": "default"
+}
