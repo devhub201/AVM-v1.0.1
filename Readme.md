@@ -66,7 +66,7 @@ lxc list          # must run without errors
 ### 3. Install
 
 ```bash
-git clone https://github.com/<your-username>/<your-repo>.git axionhost
+git clone https://github.com/devhub201/Avm-v1.git axionhost
 cd axionhost
 chmod +x install.sh
 ./install.sh
