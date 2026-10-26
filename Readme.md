@@ -248,7 +248,9 @@ __pycache__/
 
 ## 📜 License
 
-Add your license here (MIT recommended).
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+© 2026 AxionHost
 
 <div align="center">
 
