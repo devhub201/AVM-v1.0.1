@@ -13,7 +13,6 @@ How it plugs in (no rewrite of the 6500-line bot):
 
 Loaded from the bottom of avm_bot.py:  lc_nodes.setup(sys.modules[__name__])
 """
-from __future__ import annotations
 
 import asyncio
 import contextvars

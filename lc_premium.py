@@ -7,7 +7,6 @@
 Loaded from the bottom of avm_bot.py:  lc_premium.setup(sys.modules[__name__])
 Nothing here is required for the bot to run: if this module fails to load, AVM starts without it.
 """
-from __future__ import annotations
 
 import asyncio
 import re
