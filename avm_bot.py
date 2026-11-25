@@ -10,6 +10,7 @@ import logging
 import shutil
 import os
 import secrets
+import sys
 import string
 import re
 try:
@@ -61,7 +62,9 @@ def _to_int(value, default: int = 0) -> int:
 
 
 DISCORD_TOKEN = _cfg('token')
-BOT_NAME = _cfg('brand_name', 'AxionHost')
+BOT_NAME = _cfg('brand_name', 'Legacy Cloud')
+if BOT_NAME.strip().lower() in ('axionhost', 'axion host'):    # the hosting brand was renamed
+    BOT_NAME = 'Legacy Cloud'
 PREFIX = _cfg('prefix', '.')
 YOUR_SERVER_IP = _cfg('server_ip')
 MAIN_ADMIN_ID = _cfg('main_admin_id', '1405866008127864852')
@@ -73,12 +76,17 @@ ALERT_CHANNEL_ID = _to_int(_cfg('alert_channel_id'))
 STATUS_CHANNEL_ID = _to_int(_cfg('status_channel_id'))
 
 BRAND_ICON = "⚡"
-PRODUCT_NAME = "AVM"                      # Axion VPS Manager
-PRODUCT_FULL_NAME = "Axion VPS Manager"
-VERSION = "1.0.1"
+PRODUCT_NAME = "AVM"                      # short name kept
+PRODUCT_FULL_NAME = "Legacy Cloud VPS Manager"
+VERSION = "1.1.0"
 CODENAME = "Atlas"
 FOOTER_TEXT = f"{BOT_NAME} • AVM v{VERSION}"
 CHANGELOG = {
+    "1.1.0": ["Renamed to Legacy Cloud (brand, footer, container names)",
+              "Animated GIF emoji pack drawn by the bot (.emoji install) — every embed, button and dropdown uses it",
+              "Multi-node: add LXC / Docker / KVM machines over SSH, Pinggy or SSHX (.node)",
+              "VPS creation log channel with a step-by-step build log (.setlogchannel)",
+              "Mining Guard now covers remote nodes; host-level node sweeps; .leaderboard"],
     "1.0.1": ["SSH access now runs over Pinggy (tmate removed) with a saved root password",
               "SSHX rewritten: runs in the background, link read from a log, 30s limit — no more endless waiting",
               "Every step has a timeout and shows the real error (DNS, install, tunnel limit, DM closed)"],
@@ -134,7 +142,7 @@ logging.basicConfig(
 logger = logging.getLogger(f'{BOT_NAME.lower()}_vps_bot')
 
 # Check if lxc command is available
-if not shutil.which("lxc"):
+if not shutil.which("lxc") and _cfg('local_lxc', '1').lower() not in ('0', 'false', 'no', 'off'):
     logger.error("LXC command not found. Please ensure LXC is installed.")
     raise SystemExit("LXC command not found. Please ensure LXC is installed.")
 
@@ -531,6 +539,9 @@ MAINTENANCE_STARTED_AT = get_setting('maintenance_started_at', '')
 BOT_STATUS = get_setting('bot_status', 'online')
 BOT_ACTIVITY = get_setting('bot_activity', 'watching')
 BOT_ACTIVITY_NAME = get_setting('bot_activity_name', f'{BOT_NAME} VPS Manager')
+if 'axion' in BOT_ACTIVITY_NAME.lower():
+    BOT_ACTIVITY_NAME = f'{BOT_NAME} VPS Manager'
+    set_setting('bot_activity_name', BOT_ACTIVITY_NAME)
 DAILY_CREDIT_AMOUNT = int(get_setting('daily_credit_amount', 10))
 
 # ---- AxionHost runtime settings: config.json -> DB -> globals ----
@@ -4885,7 +4896,7 @@ def _next_container_name(user_id: str) -> tuple[str, int]:
     existing = {v['container_name'] for lst in vps_data.values() for v in lst}
     n = len(vps_data.get(user_id, [])) + 1
     while True:
-        name = f"{BOT_NAME.lower()}-vps-{user_id}-{n}"
+        name = f"{re.sub(r'[^a-z0-9]+', '-', BOT_NAME.lower()).strip('-') or 'vps'}-vps-{user_id}-{n}"
         if name not in existing:
             return name, n
         n += 1
@@ -6499,6 +6510,23 @@ async def manage_typo(ctx):
     """Handle typo for manage command"""
     embed = create_info_embed("Command Correction", f"Did you mean `{PREFIX}manage`? Use the correct command.")
     await ctx.send(embed=embed)
+
+# ============ LEGACY CLOUD EXTENSIONS (animated emojis, nodes, creation log) ============
+# Each layer is optional: if one fails to load, the base bot keeps running and the reason is logged.
+
+_lc_mod = sys.modules[__name__]
+try:
+    import lc_premium
+    lc_premium.setup(_lc_mod)
+except Exception:
+    logger.exception("Legacy Cloud premium layer failed to load (is Pillow installed? pip install -r requirements.txt)")
+try:
+    import lc_nodes
+    lc_nodes.setup(_lc_mod)
+    if hasattr(bot, 'lc_post_creation'):
+        lc_nodes.ON_CREATED.append(bot.lc_post_creation)
+except Exception:
+    logger.exception("Legacy Cloud node layer failed to load")
 
 # ============ RUN THE BOT ============
 

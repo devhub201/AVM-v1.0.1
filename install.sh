@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════╗
-# ║  AVM — Axion VPS Manager  •  Installer & Control Panel   ║
+# ║  AVM — Legacy Cloud VPS Manager • Installer & Control    ║
 # ║  Made by Peter Parker                                    ║
 # ╚══════════════════════════════════════════════════════════╝
 #
@@ -76,8 +76,8 @@ banner() {
   [ "$FANCY" = 1 ] && printf '\e[2J\e[H'
   printf '\n'
   printf '   %s╔═╗╦  ╦╔╦╗%s\n' $'\e[38;5;213m' "$R" | { [ "$FANCY" = 1 ] && cat || sed 's/\x1b\[[0-9;]*m//g'; }
-  printf '   %s╠═╣╚╗╔╝║║║%s   %sAxion VPS Manager%s\n' $'\e[38;5;177m' "$R" "$B$WHT" "$R" | { [ "$FANCY" = 1 ] && cat || sed 's/\x1b\[[0-9;]*m//g'; }
-  printf '   %s╩ ╩ ╚╝ ╩ ╩%s   %sby AxionHost%s\n' $'\e[38;5;141m' "$R" "$GRY" "$R" | { [ "$FANCY" = 1 ] && cat || sed 's/\x1b\[[0-9;]*m//g'; }
+  printf '   %s╠═╣╚╗╔╝║║║%s   %sLegacy Cloud VPS Manager%s\n' $'\e[38;5;177m' "$R" "$B$WHT" "$R" | { [ "$FANCY" = 1 ] && cat || sed 's/\x1b\[[0-9;]*m//g'; }
+  printf '   %s╩ ╩ ╚╝ ╩ ╩%s   %sby Legacy Cloud%s\n' $'\e[38;5;141m' "$R" "$GRY" "$R" | { [ "$FANCY" = 1 ] && cat || sed 's/\x1b\[[0-9;]*m//g'; }
   printf '\n'
   printf ' %s╭────────────────────────────────────╮%s\n' "$PUR" "$R"
   printf ' %s│%s  %s⚡ Made by %s%s%s                  %s│%s\n' "$PUR" "$R" "$YEL" "$B$PNK" "$AUTHOR" "$R" "$PUR" "$R"
@@ -241,7 +241,7 @@ cmd_install() {
   step 3 4 "Configuration"
   [ -f "$CFG" ] || echo '{}' >"$CFG"
   chmod 600 "$CFG"
-  cfg_set brand_name AxionHost
+  cfg_set brand_name "Legacy Cloud"
   printf ' %sPress Enter to keep a value shown in [brackets].%s\n\n' "$GRY" "$R"
   ask "Discord bot token" token secret
   ask "Your Discord user ID" main_admin_id digits "main admin"
@@ -319,7 +319,7 @@ cmd_service() {
   [ -x "$VENV/bin/python" ] || run_step "Preparing Python environment" setup_venv || die "Environment setup failed — see $WORKLOG"
   cat >"/etc/systemd/system/$SVC.service" <<UNIT
 [Unit]
-Description=AVM - Axion VPS Manager (AxionHost)
+Description=AVM - Legacy Cloud VPS Manager
 After=network-online.target
 Wants=network-online.target
 
@@ -376,6 +376,28 @@ cmd_update() {
   printf '\n %s♥ Made by %s%s%s\n\n' "$GRY" "$B$PNK" "$AUTHOR" "$R"
 }
 
+cmd_upgrade() {  # pull every file of the new version (the bot is now several files) and restart
+  find_bot; need_py
+  command -v git >/dev/null 2>&1 || die "git not found — run: apt install -y git"
+  [ -d "$DIR/.git" ] || die "This folder is not a git clone, so it cannot pull updates. Re-clone the repo, or replace the files by hand."
+  banner
+  : >"$WORKLOG"
+  step 1 3 "Pulling the new version"
+  cp "$BOT" "$BOT.bak-$(date +%Y%m%d-%H%M%S)" && ok "Old bot file backed up"
+  run_step "git pull" git -C "$DIR" pull --ff-only || die "git pull failed (local edits in the way?) — see $WORKLOG"
+  step 2 3 "Installing dependencies"
+  [ -x "$VENV/bin/python" ] || run_step "Preparing Python environment" setup_venv || die "Environment setup failed — see $WORKLOG"
+  run_step "pip install -r requirements.txt" "$VENV/bin/pip" install -q -r "$DIR/requirements.txt" || die "pip install failed — see $WORKLOG"
+  step 3 3 "Restarting"
+  if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet "$SVC" 2>/dev/null; then
+    run_step "Restarting the bot" systemctl restart "$SVC" || die "Restart failed — roll back with the .bak file."
+  else
+    info "Service is not running — start it with: sudo ./install.sh service"
+  fi
+  local ver; ver="$(grep -m1 -E '^VERSION *= *' "$BOT" | sed -E 's/.*"([^"]+)".*/\1/')"
+  ok "Now on version ${B}${ver:-unknown}${R}"
+}
+
 cmd_status() {
   find_bot
   banner
@@ -404,7 +426,8 @@ cmd_help() {
     "banner <url>|Set the banner"
     "show|Print config (secrets hidden)"
     "service|Install + start the 24/7 service"
-    "update <url>|Safely update the bot file"
+    "upgrade|git pull all files + deps + restart (recommended)"
+    "update <url>|Replace only the main bot file from a link"
     "status|Is it running? which version?"
     "start / stop / restart|Control the service"
     "logs|Follow the live log"
@@ -422,6 +445,7 @@ main() {
     banner)          [ $# -ge 2 ] || die "usage: ./install.sh banner <url>"; check_url "$2"; cfg_set banner_url "$2"; ok "Banner saved — ./install.sh restart" ;;
     show)            cmd_show ;;
     service)         cmd_service ;;
+    upgrade)         cmd_upgrade ;;
     update)          shift; cmd_update "$@" ;;
     status)          cmd_status ;;
     start|stop|restart) cmd_ctl "$1" ;;

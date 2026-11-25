@@ -1,0 +1,7 @@
+config.json
+vps.db
+*.log
+venv/
+__pycache__/
+lc_data/
+*.bak-*

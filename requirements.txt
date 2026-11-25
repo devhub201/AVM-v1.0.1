@@ -1,3 +1,4 @@
 discord.py>=2.3
 aiohttp>=3.9
+Pillow>=10.0   # draws the animated emoji pack
 # optional (only for panel screenshots): playwright

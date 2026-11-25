@@ -1,8 +1,8 @@
 <div align="center">
 
-# ⚡ AVM — Axion VPS Manager
+# ⚡ AVM — Legacy Cloud VPS Manager
 
-### `AVM v1.0 "Atlas"` — premium Discord bot for running a VPS hosting brand on LXC/LXD
+### `AVM v1.1 "Atlas"` — premium Discord bot for running a VPS hosting brand on LXC / Docker / KVM nodes
 
 Free VPS rewards for **invites & boosts** • **Auto-deploy** • **Anti-mining guard** • **Live node dashboard**
 
@@ -31,6 +31,53 @@ Free VPS rewards for **invites & boosts** • **Auto-deploy** • **Anti-mining 
 | 🛠️ | **Full VPS management** | Create, resize, snapshot, clone, share, suspend, port-forward and more. |
 | 🏷️ | **Versioning** | `.version` shows the current AVM version and changelog. |
 | 💎 | **Premium UI** | Dropdowns, buttons, progress bars and clean embeds everywhere. |
+
+---
+
+## 🆕 v1.1 — Legacy Cloud
+
+### Upgrade an existing install
+```bash
+cd legacycloud                # your AVM folder
+./install.sh upgrade          # git pull + pip install (Pillow) + restart
+./install.sh set brand_name "Legacy Cloud"   # only if you want to force it (old "AxionHost" is migrated automatically)
+```
+`Legacy Cloud` is now the default brand, shown in every footer, and new VPS containers are named `legacy-cloud-vps-<id>-<n>` (existing containers keep their names).
+
+### 🎞️ Animated emoji pack (all GIF)
+The bot draws **43 animated hosting icons** itself and uploads them (`ax_*` names, so it can share the pack with the AxionHost all-in-one bot).
+Give the bot **Manage Expressions** and it installs them on start, or run `.emoji install` (`.emoji install overwrite` to redraw, `.emoji list` to preview).
+Every ✅ ❌ 🟢 🔴 🖥️ ⚙️ … in every embed, button and dropdown is swapped for its animated twin automatically — no code changes. Until the pack is installed, normal emojis are used.
+
+### 🛰️ Nodes — LXC, Docker, KVM over SSH / Pinggy / SSHX
+```text
+.node join [pinggy]                    command to run on the new machine (authorises the bot's key; pinggy prints tcp://host:port)
+.node add <name> <lxc|docker|kvm> <host | tcp://host:port> [port] [user]
+.node list | info | test <name>        live CPU / RAM / disk / guests / ping
+.node setpass <name>                   password login (needs sshpass) instead of key
+.node sshx <name> <url> / terminal     SSHX web-terminal link, sent to your DMs
+.node limit <name> <max_vps>           capacity     .node pool <name> <lxd_pool>
+.node default <name|off>               preferred deploy node (otherwise least-loaded)
+.node enable|disable <name>            .node board #channel   (live public node board)
+.node scan <name>                      anti-mining sweep of the node host
+.node exec <name> <cmd> / remove <name> [force]    (main admin)
+```
+* New VPS (`.claimfree`, `.create`) are built on the best online node with room; everything else (`.manage`, start/stop, SSH access, snapshots, mining guard) follows the VPS to its node automatically.
+* **LXC** nodes: everything. **Docker** nodes: create, start/stop/restart/delete, mining guard (disk limit is not enforced by Docker). **KVM** nodes: monitor and start/stop/restart/delete existing VMs (auto-create needs a VM template — not available yet).
+* Offline / back-online alerts go to the alert channel; remote hosts get a mining sweep every ~5 minutes.
+* Control-only bot (no VPS on this machine)? set `local_lxc` to `0` in config and `.node disable local`.
+* Pinggy free tunnels expire after ~60 min — fine for testing, use a Pinggy token or a public IP for permanent nodes. SSHX is an interactive web terminal, so it is a staff terminal link only; SSH/Pinggy do the automation.
+* The bot's SSH key lives in `lc_data/` (never commit it). Password logins are stored in `vps.db` in plain text, so prefer key login.
+
+### 📜 VPS creation log
+```text
+.setlogchannel #vps-creations          every new VPS is logged: owner, plan, OS, node, source, build time + step-by-step build log
+.logoff                                disable
+```
+Only successful creations are posted (not deletes, edits or failures).
+
+### 🏆 More
+`.leaderboard` — top inviters and boosters with progress bars toward the biggest invite reward.
 
 ---
 
@@ -66,8 +113,8 @@ lxc list          # must run without errors
 ### 3. Install
 
 ```bash
-git clone https://github.com/devhub201/Avm-v1.git axionhost
-cd axionhost
+git clone https://github.com/devhub201/AVM-v1.0.1.git legacycloud
+cd legacycloud
 chmod +x install.sh
 ./install.sh
 ```
@@ -250,10 +297,10 @@ __pycache__/
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-© 2026 AxionHost
+© 2026 Legacy Cloud
 
 <div align="center">
 
-**AVM v1.0 "Atlas" — built for ⚡ AxionHost**
+**AVM v1.1 "Atlas" — built for ⚡ Legacy Cloud**
 
 </div>
