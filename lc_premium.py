@@ -353,18 +353,10 @@ def setup(m):
                                       description="This is how each new VPS will be reported.", color=0x00ff88)
             else:
                 v = info["vps"]
-                embed = discord.Embed(title="🚀 New VPS Created", color=0x00ff88,
-                                      description=f"<@{info['owner']}> • `{v['container_name']}`")
-                embed.add_field(name="📦 Plan", value=f"{v.get('plan_name', 'Custom')}\n{v.get('config', '')}", inline=True)
-                embed.add_field(name="🖥️ OS", value=f"`{v.get('os_version', '?')}`", inline=True)
-                embed.add_field(name="🛰️ Node", value=f"`{info.get('node', 'local')}` ({info.get('node_type', 'lxc')})", inline=True)
-                embed.add_field(name="🎁 Source", value=info.get("source", "—"), inline=True)
-                embed.add_field(name="⏱️ Build time", value=f"{info.get('seconds', 0):.1f}s", inline=True)
-                embed.add_field(name="👤 Owner ID", value=f"`{info['owner']}`", inline=True)
-                steps = info.get("steps") or []
-                if steps:
-                    lines = [f"{'✅' if ok else '❌'} {label} — {sec:.1f}s" for label, sec, ok in steps[:12]]
-                    embed.add_field(name="📋 Build log", value="\n".join(lines)[:1000], inline=False)
+                line1 = f"🚀 <@{info['owner']}> created `{v['container_name']}`"
+                line2 = (f"📦 {v.get('plan_name', 'Custom')} • {v.get('config', '')} • `{v.get('os_version', '?')}` "
+                         f"• 🛰️ `{info.get('node', 'local')}` • ⏱️ {info.get('seconds', 0):.0f}s")
+                embed = discord.Embed(title="New VPS Created", color=0x00ff88, description=f"{line1}\n{line2}")
             if m.valid_url(m.THUMBNAIL):
                 embed.set_thumbnail(url=m.THUMBNAIL)
             embed.set_footer(text=m.FOOTER_TEXT)
