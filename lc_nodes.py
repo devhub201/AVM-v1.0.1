@@ -195,7 +195,7 @@ def join_script(pubkey: str, pinggy: bool, user: str = "root") -> str:
 # ----------------------------------------------------------------------------- setup
 def setup(m):
     import discord
-    from discord.ext import commands, tasks
+    from discord.ext import tasks
 
     bot = m.bot
     real_asyncio = asyncio

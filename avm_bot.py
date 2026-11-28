@@ -20,7 +20,6 @@ except ImportError:
 from typing import Optional, List, Dict, Any
 import sqlite3
 import random
-import traceback
 import aiohttp
 import time
 from collections import deque
@@ -677,12 +676,12 @@ async def maintenance_check(ctx):
         try:
             started_by_user = await bot.fetch_user(int(MAINTENANCE_STARTED_BY)) if MAINTENANCE_STARTED_BY else None
             started_by_mention = started_by_user.mention if started_by_user else "Unknown"
-        except:
+        except Exception:
             started_by_mention = "Unknown"
         
         try:
             started_at = datetime.fromisoformat(MAINTENANCE_STARTED_AT).strftime('%Y-%m-%d %H:%M:%S') if MAINTENANCE_STARTED_AT else "Unknown"
-        except:
+        except Exception:
             started_at = "Unknown"
         
         embed = discord.Embed(
@@ -1064,7 +1063,7 @@ async def show_plans(ctx):
         plan_text = f"⌯⌲ RAM: {plan['ram']} GB\n"
         plan_text += f"⌯⌲ CPU: {plan['cpu']} Cores\n"
         plan_text += f"⌯⌲ Storage: {plan['disk']} GB\n"
-        plan_text += f"⌯⌲ Network: Private IPv4"
+        plan_text += "⌯⌲ Network: Private IPv4"
         
         embed.add_field(
             name=f"⌯⌲ {plan['name']} — {plan['invites']} Invites",
@@ -1077,7 +1076,7 @@ async def show_plans(ctx):
         plan_text = f"⌯⌲ RAM: {plan['ram']} GB\n"
         plan_text += f"⌯⌲ CPU: {plan['cpu']} Cores\n"
         plan_text += f"⌯⌲ Storage: {plan['disk']} GB\n"
-        plan_text += f"⌯⌲ Network: Private IPv4"
+        plan_text += "⌯⌲ Network: Private IPv4"
         
         embed.add_field(
             name=f"⌯⌲ {plan['name']} — {plan['boosts']} Boost",
@@ -1122,7 +1121,7 @@ async def my_vps(ctx):
         )
         embed.add_field(
             name="⌯⌲ Quick Actions",
-            value=f"`.plans`",
+            value="`.plans`",
             inline=False
         )
         if THUMBNAIL and THUMBNAIL.startswith(('http://', 'https://')):
@@ -1268,7 +1267,7 @@ async def get_cloudflared_link(container_name: str, timeout: int = 60) -> str:
 
         return None  # timeout ho gaya
 
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -1664,7 +1663,7 @@ async def list_user_vps(ctx):
         )
         embed.add_field(
             name="⌯⌲ Quick Actions",
-            value=f"`.plans`",
+            value="`.plans`",
             inline=False
         )
         if THUMBNAIL and THUMBNAIL.startswith(('http://', 'https://')):
@@ -1769,11 +1768,11 @@ class ManageView(discord.ui.View):
             try:
                 owner_user = await bot.fetch_user(int(self.owner_id))
                 owner_text = f"\n**Owner:** {owner_user.mention}"
-            except:
+            except Exception:
                 owner_text = f"\n**Owner ID:** {self.owner_id}"
         
         embed = discord.Embed(
-            title=f"🖥️ VPS Management",
+            title="🖥️ VPS Management",
             description=f"Managing VPS #{index + 1}: `{container_name}`{owner_text}",
             color=status_color
         )
@@ -1969,7 +1968,7 @@ async def manage_vps(ctx, user: discord.Member = None):
             )
             embed.add_field(
                 name="⌯⌲ Quick Actions",
-                value=f"`.plans`",
+                value="`.plans`",
                 inline=False
             )
             if THUMBNAIL and THUMBNAIL.startswith(('http://', 'https://')):
@@ -2101,7 +2100,7 @@ async def vps_info(ctx, container_name: str):
                 user_id = uid
                 try:
                     found_user = await bot.fetch_user(int(uid))
-                except:
+                except Exception:
                     found_user = None
                 break
         if found_vps:
@@ -2119,7 +2118,7 @@ async def vps_info(ctx, container_name: str):
     
     embed = discord.Embed(
         title=f"🖥️ VPS Information - {container_name}",
-        description=f"Details for VPS",
+        description="Details for VPS",
         color=0x1a1a1a
     )
     
@@ -2505,7 +2504,7 @@ class PlanEditView(discord.ui.View):
         
         embed = discord.Embed(
             title=f"✏️ Editing Plan: {plan['name']}",
-            description=f"Current configuration:",
+            description="Current configuration:",
             color=0x00ccff
         )
         embed.add_field(name="RAM", value=f"{plan['ram']} GB", inline=True)
@@ -2629,7 +2628,7 @@ class EditPlanModal(discord.ui.Modal, title="Edit Plan Value"):
             
             embed = discord.Embed(
                 title=f"✏️ Editing Plan: {self.parent_view.plan['name']}",
-                description=f"Updated configuration:",
+                description="Updated configuration:",
                 color=0x00ccff
             )
             embed.add_field(name="RAM", value=f"{self.parent_view.plan['ram']} GB", inline=True)
@@ -2723,7 +2722,7 @@ async def admin_list(ctx):
     try:
         main_admin = await bot.fetch_user(int(MAIN_ADMIN_ID))
         embed.add_field(name="⌯⌲ Main Admin", value=f"{main_admin.mention}", inline=False)
-    except:
+    except Exception:
         embed.add_field(name="⌯⌲ Main Admin", value=f"User ID: {MAIN_ADMIN_ID}", inline=False)
     
     if admin_data['admins']:
@@ -2732,7 +2731,7 @@ async def admin_list(ctx):
             try:
                 admin_user = await bot.fetch_user(int(admin_id))
                 admin_text.append(f"• {admin_user.mention}")
-            except:
+            except Exception:
                 admin_text.append(f"• User ID: {admin_id}")
         
         embed.add_field(name="⌯⌲ Admins", value="\n".join(admin_text), inline=False)
@@ -3254,7 +3253,7 @@ async def list_all_vps(ctx):
                 if vps.get('whitelisted', False):
                     status_text += " (WHITELISTED)"
                 vps_info.append(f"{status_emoji} **{user.name}** - VPS {i+1}: `{vps['container_name']}` - {status_text}")
-        except:
+        except Exception:
             vps_info.append(f"❓ Unknown User ({user_id}) - {len(vps_list)} VPS")
     
     if vps_info:
@@ -3425,7 +3424,7 @@ async def vps_network(ctx, container_name: str, action: str, value: str = None):
                     color=0x00ccff
                 )
             else:
-                embed = create_error_embed("Error", f"Failed to list network interfaces")
+                embed = create_error_embed("Error", "Failed to list network interfaces")
         elif action == 'limit' and value:
             await execute_lxc(f"lxc config device set {container_name} eth0 limits.egress {value}")
             await execute_lxc(f"lxc config device set {container_name} eth0 limits.ingress {value}")
@@ -3744,7 +3743,7 @@ async def confirm_purge(ctx, user_id: str):
     """Confirm purge of user data"""
     try:
         user = await bot.fetch_user(int(user_id))
-    except:
+    except Exception:
         user = None
     
     if user_id not in vps_data:
@@ -3756,8 +3755,8 @@ async def confirm_purge(ctx, user_id: str):
         try:
             await execute_lxc(f"lxc delete {vps['container_name']} --force")
             deleted_count += 1
-        except:
-            pass
+        except Exception as exc:
+            logger.warning(f"Purge: could not delete {vps['container_name']}: {exc}")
     
     del vps_data[user_id]
     save_vps_data()
@@ -3907,7 +3906,7 @@ async def ports_command(ctx, subcmd: str = None, *args):
             await ctx.send(embed=create_error_embed("Not Found", "Forward ID not found. Use .ports list."))
     
     else:
-        await ctx.send(embed=create_error_embed("Invalid Subcommand", f"Use: add <vps_num> <port>, list, remove <id>"))
+        await ctx.send(embed=create_error_embed("Invalid Subcommand", "Use: add <vps_num> <port>, list, remove <id>"))
 
 @bot.command(name='ports-add-user')
 @is_admin()
@@ -4014,7 +4013,7 @@ async def ports_revoke(ctx, forward_id: int):
                 dm_embed.set_image(url=BANNER)
             dm_embed.set_footer(text=FOOTER_TEXT)
             await user.send(embed=dm_embed)
-        except:
+        except Exception:
             pass
         embed = discord.Embed(
             title="✅ Revoked",
@@ -4296,7 +4295,7 @@ async def help_command(ctx):
     if user_id in active_help_menus:
         try:
             await active_help_menus[user_id].delete()
-        except:
+        except Exception:
             pass
         del active_help_menus[user_id]
     

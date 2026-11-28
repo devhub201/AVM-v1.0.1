@@ -10,9 +10,7 @@ Nothing here is required for the bot to run: if this module fails to load, AVM s
 
 import asyncio
 import re
-import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import lc_icons
 import lc_icons_extra  # noqa: F401  (registers the extra icons)

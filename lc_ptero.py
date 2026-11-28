@@ -480,7 +480,6 @@ def script_b64() -> str:
 # ----------------------------------------------------------------------------- bot integration
 def setup(m):
     import discord
-    from discord.ext import commands
 
     bot = m.bot
     ORANGE = 0xFFA12B
