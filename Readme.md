@@ -2,7 +2,7 @@
 
 # ⚡ AVM — Legacy Cloud VPS Manager
 
-### `AVM v1.1 "Atlas"` — premium Discord bot for running a VPS hosting brand on LXC / Docker / KVM nodes
+### `AVM v1.2 "Atlas"` — premium Discord bot for running a VPS hosting brand on LXC / Docker / KVM nodes
 
 Free VPS rewards for **invites & boosts** • **Auto-deploy** • **Anti-mining guard** • **Live node dashboard**
 
@@ -33,6 +33,18 @@ Free VPS rewards for **invites & boosts** • **Auto-deploy** • **Anti-mining 
 | 💎 | **Premium UI** | Dropdowns, buttons, progress bars and clean embeds everywhere. |
 
 ---
+
+## 🆕 v1.2 — Pterodactyl panel installer
+
+Press **🦅 Panel** in `.manage` (or run `.ptero [container]`) and the bot installs a Pterodactyl Panel, and optionally Wings, inside the VPS.
+
+1. **Pick the IP.** `1. Default IP` uses the bot's IP and forwards the ports for you. `2. Add your IP` asks for a Serververse Transit token and connects it inside the VPS; if it does not connect, setup falls back to the default IP.
+2. **Answer 5 questions:** admin email, username, password (empty = generated), timezone, install Wings yes/no.
+3. **Watch live progress** in the channel. When it finishes, **Show login** reveals the credentials only to the owner.
+
+Supported inside the VPS: Ubuntu 22.04, Ubuntu 24.04, Debian 12, with at least 1 GB RAM and 6 GB free disk. If any step fails, **Retry** resumes from that step (finished steps are skipped). If Docker cannot run in the VPS, the panel is still installed and the bot says Wings was skipped.
+
+Run the tests with `python3 -m pytest tests`.
 
 ## 🆕 v1.1 — Legacy Cloud
 

@@ -78,7 +78,7 @@ STATUS_CHANNEL_ID = _to_int(_cfg('status_channel_id'))
 BRAND_ICON = "⚡"
 PRODUCT_NAME = "AVM"                      # short name kept
 PRODUCT_FULL_NAME = "Legacy Cloud VPS Manager"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 CODENAME = "Atlas"
 FOOTER_TEXT = f"{BOT_NAME} • AVM v{VERSION}"
 CHANGELOG = {
@@ -6527,6 +6527,11 @@ try:
         lc_nodes.ON_CREATED.append(bot.lc_post_creation)
 except Exception:
     logger.exception("Legacy Cloud node layer failed to load")
+try:
+    import lc_ptero
+    lc_ptero.setup(_lc_mod)
+except Exception:
+    logger.exception("Legacy Cloud Pterodactyl installer failed to load")
 
 # ============ RUN THE BOT ============
 
