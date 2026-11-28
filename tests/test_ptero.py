@@ -34,7 +34,7 @@ def test_redact():
     assert p.redact("token abc123 end", ["abc123"]) == "token *** end"
 
 def test_env_quoting():
-    env = p.build_env({k: "x y'z;$(id)" for k in ["PANEL_URL","PUBLIC_IP","ADMIN_EMAIL","ADMIN_USER","ADMIN_PASS","TZ_NAME","WANT_WINGS","API_PORT","SFTP_PORT","GAME_PORTS","NODE_NAME"]})
+    env = p.build_env({k: "x y'z;$(id)" for k in ["PANEL_URL","PUBLIC_IP","ADMIN_EMAIL","ADMIN_USER","ADMIN_PASS","TZ_NAME","WANT_WINGS","API_PORT","SFTP_PORT","GAME_PORTS","NODE_NAME","BRAND"]})
     out = subprocess.run(["bash", "-c", env + 'printf %s "$PANEL_URL"'], capture_output=True, text=True).stdout
     assert out == "x y'z;$(id)"
 
@@ -45,3 +45,10 @@ def test_script_syntax():
     assert r.returncode == 0, r.stderr
     for step in ("s_prepare","s_web","s_db","s_files","s_setup","s_docker","s_wings","s_node"):
         assert f"{step}()" in p.INSTALL_SCRIPT
+
+def test_brand():
+    assert p.clean_brand("") == "Legacy Cloud Free VPS"
+    assert p.clean_brand("My <b>Host</b>'; DROP") == "My bHostb DROP"
+    assert len(p.clean_brand("x" * 99)) == 40
+    assert p.clean_brand("Legacy Cloud Free VPS") == "Legacy Cloud Free VPS"
+    assert "BRAND" in p.build_env({k: "v" for k in ["PANEL_URL","PUBLIC_IP","ADMIN_EMAIL","ADMIN_USER","ADMIN_PASS","TZ_NAME","WANT_WINGS","API_PORT","SFTP_PORT","GAME_PORTS","NODE_NAME","BRAND"]})

@@ -44,6 +44,14 @@ TZ_RE = re.compile(r"^[A-Za-z]+(?:/[A-Za-z0-9_+-]+){0,2}$")
 TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{20,120}$")
 IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 GAME_PORT_COUNT = 5
+DEFAULT_BRAND = "Legacy Cloud Free VPS"
+BRAND_RE = re.compile(r"[^A-Za-z0-9 ._-]")
+
+
+def clean_brand(text: str) -> str:
+    """Panel name shown in the title, login page, emails and 2FA. Safe characters only."""
+    t = BRAND_RE.sub("", text or "").strip()[:40].strip()
+    return t or DEFAULT_BRAND
 
 
 # ----------------------------------------------------------------------------- pure helpers
@@ -154,7 +162,7 @@ def progress_text(st: Dict[str, Any], skipped: Optional[set] = None) -> str:
 
 def build_env(opts: Dict[str, Any]) -> str:
     keys = ["PANEL_URL", "PUBLIC_IP", "ADMIN_EMAIL", "ADMIN_USER", "ADMIN_PASS", "TZ_NAME",
-            "WANT_WINGS", "API_PORT", "SFTP_PORT", "GAME_PORTS", "NODE_NAME"]
+            "WANT_WINGS", "API_PORT", "SFTP_PORT", "GAME_PORTS", "NODE_NAME", "BRAND"]
     return "\n".join(f"{k}={shlex.quote(str(opts[k]))}" for k in keys) + "\n"
 
 
@@ -265,6 +273,8 @@ s_setup() {
   local dbp
   dbp=$(cat "$D/dbpass")
   grep -q '^APP_KEY=base64' .env || php artisan key:generate --force
+  setenv APP_NAME "\"$BRAND\""
+  setenv MAIL_FROM_NAME "\"$BRAND\""
   setenv APP_ENV production
   setenv APP_DEBUG false
   setenv APP_URL "$PANEL_URL"
@@ -284,6 +294,10 @@ s_setup() {
   grep -q '^HASHIDS_SALT=.\+' .env || setenv HASHIDS_SALT "$(openssl rand -hex 10)"
   setenv HASHIDS_LENGTH 8
   php artisan migrate --seed --force
+  mysql panel -e "INSERT INTO settings (\`key\`, \`value\`) VALUES ('settings::app:name', '${BRAND}') ON DUPLICATE KEY UPDATE \`value\`='${BRAND}'"
+  cat > "$PANEL/public/assets/svgs/pterodactyl.svg" <<'LOGO'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#ffa12b"/><path d="M20 44a9 9 0 0 1-1.4-17.9A13 13 0 0 1 44 24a10 10 0 0 1-1 20z" fill="none" stroke="#1a1000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+LOGO
   local cnt
   cnt=$(mysql -N panel -e "SELECT COUNT(*) FROM users WHERE email='${ADMIN_EMAIL}'")
   if [ "$cnt" = 0 ]; then
@@ -412,11 +426,11 @@ s_node() {
     nm=$((memmb - 600)); [ "$nm" -ge 512 ] || nm=512
     nd=$((dskmb * 70 / 100))
     if [ "$(mysql -N panel -e 'SELECT COUNT(*) FROM locations')" = 0 ]; then
-      php artisan p:location:make --short=legacy --long="Legacy Cloud" --no-interaction
+      php artisan p:location:make --short=legacy --long="$BRAND" --no-interaction
     fi
     loc=$(mysql -N panel -e 'SELECT id FROM locations ORDER BY id LIMIT 1')
     if [ "$(mysql -N panel -e 'SELECT COUNT(*) FROM nodes')" = 0 ]; then
-      if ! php artisan p:node:make --name="$NODE_NAME" --description="Created by Legacy Cloud" --locationId="$loc" \
+      if ! php artisan p:node:make --name="$NODE_NAME" --description="$BRAND node" --locationId="$loc" \
           --fqdn="$PUBLIC_IP" --public=1 --scheme=http --proxy=0 --maxMemory="$nm" --overallocateMemory=0 \
           --maxDisk="$nd" --overallocateDisk=0 --uploadSize=100 --daemonListeningPort="$API_PORT" \
           --daemonSFTPPort="$SFTP_PORT" --daemonBase=/var/lib/pterodactyl --no-interaction; then
@@ -591,10 +605,11 @@ def setup(m):
 
     # ------------------------------------------------------------ install runner
     async def start_install(container: str, owner: str, requester: str, answers: Dict[str, Any], plan: Dict[str, Any], channel):
+        brand = clean_brand(m.get_setting("panel_brand", DEFAULT_BRAND))
         opts = {"PANEL_URL": plan["panel_url"], "PUBLIC_IP": plan["ip"], "ADMIN_EMAIL": answers["email"],
                 "ADMIN_USER": answers["user"], "ADMIN_PASS": answers["password"], "TZ_NAME": answers["tz"],
                 "WANT_WINGS": 1 if answers["wings"] else 0, "API_PORT": plan["api_port"], "SFTP_PORT": plan["sftp_port"],
-                "GAME_PORTS": " ".join(str(p) for p in plan["game_ports"]), "NODE_NAME": f"{container}-node"[:40]}
+                "GAME_PORTS": " ".join(str(p) for p in plan["game_ports"]), "NODE_NAME": brand, "BRAND": brand}
         env_b64 = base64.b64encode(build_env(opts).encode()).decode()
         prep = (f"mkdir -p {WORKDIR} && umask 077 && echo {env_b64} | base64 -d > {WORKDIR}/env && "
                 f"echo {script_b64()} | base64 -d > {WORKDIR}/install.sh && chmod 700 {WORKDIR}/install.sh && rm -f {WORKDIR}/state")
